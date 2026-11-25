@@ -28,5 +28,5 @@ github-mcp-server = "server:main"
 py-modules = ["server"]
 
 [project.urls]
-"Homepage" = "https://github.com/yourusername/github-mcp-server"
-"Bug Tracker" = "https://github.com/yourusername/github-mcp-server/issues"
+Homepage = "https://github.com/OfficialBakang/github-mcp-server"
+"Bug Tracker" = "https://github.com/OfficialBakang/github-mcp-server/issues"

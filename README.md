@@ -42,7 +42,7 @@ The Model Context Protocol is an open standard that lets AI applications talk to
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/github-mcp-server.git
+git clone https://github.com/OfficialBakang/github-mcp-server.git
 cd github-mcp-server
 
 # 2. Create and activate a virtual environment (recommended)
@@ -71,7 +71,7 @@ Or add it to your shell profile (`~/.zshrc`, `~/.bashrc`) so it persists.
 ## Running the Server
 
 ```bash
-python src/github_mcp/server.py
+python server.py
 ```
 
 The server will start and wait for MCP messages on stdin. You won't see output here — connect it through Claude Desktop instead.
@@ -88,7 +88,7 @@ The server will start and wait for MCP messages on stdin. You won't see output h
   "mcpServers": {
     "github": {
       "command": "python3",
-      "args": ["/absolute/path/to/github-mcp-server/src/github_mcp/server.py"],
+      "args": ["/absolute/path/to/github-mcp-server/server.py"],
       "env": {
         "GITHUB_TOKEN": "ghp_your_token_here"
       }
@@ -141,7 +141,7 @@ github-mcp-server/
 
 ```bash
 pip install pytest pytest-mock
-pytest tests/ -v
+python -m pytest test_server.py -v
 ```
 
 ---

@@ -539,8 +539,17 @@ def list_repository_commits(
 # Entry point
 # ---------------------------------------------------------------------------
 
-if __name__ == "__main__":
+
+def main() -> None:
+    """Start the GitHub MCP server using stdio transport."""
     import sys
+
     sys.stdout.reconfigure(line_buffering=True)
     sys.stderr.reconfigure(line_buffering=True)
+
     mcp.run(transport="stdio")
+
+
+if __name__ == "__main__":
+    main()
+

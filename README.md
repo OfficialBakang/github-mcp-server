@@ -1,186 +1,500 @@
-# GitHub MCP Server 🐙
 
-A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that connects AI clients like **Claude Desktop** directly to the GitHub REST API — letting the AI search repositories, read and create issues, inspect pull requests, browse commits, and read file contents without leaving the chat.
+# GitHub MCP Server
 
----
+[![CI](https://github.com/OfficialBakang/github-mcp-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/OfficialBakang/github-mcp-server/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.11--3.14-3776AB?logo=python&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-SDK%20v1-7C3AED)
+![Tests](https://img.shields.io/badge/Tests-21%20passing-brightgreen)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-blue)
 
-## What is MCP?
+A Python-based Model Context Protocol (MCP) server that enables AI applications to interact with GitHub through 12 structured tools covering repository discovery, issue management, pull request inspection, source code retrieval and commit history.
 
-The Model Context Protocol is an open standard that lets AI applications talk to external tools and data sources through a common interface. This server implements the protocol over **stdio transport**, meaning it runs as a local process that Claude Desktop (or any other MCP client) spawns and communicates with via stdin/stdout.
+Built to demonstrate practical AI tool integration, REST API engineering, Python packaging, automated testing and cross-platform continuous integration.
 
----
+## Overview
 
-## Tools Exposed
+AI assistants can reason about software development tasks, but they require external tools to access repository data and perform real-world operations.
+
+This project bridges that gap by exposing GitHub REST API functionality through the Model Context Protocol.
+
+Compatible AI clients can discover and invoke GitHub tools using structured parameters, enabling natural-language interactions with repositories without requiring users to manually construct API requests.
+
+## Key Features
+
+- 12 MCP-compatible GitHub tools.
+- Repository discovery and metadata retrieval.
+- Issue creation, inspection and updates.
+- Pull request analysis and changed-file inspection.
+- Source code and commit history retrieval.
+- Token-based GitHub API authentication.
+- Centralised HTTP request handling.
+- Configurable result limits for collection endpoints.
+- Installable Python package with a CLI entry point.
+- 21 automated tests.
+- Cross-platform GitHub Actions CI.
+
+## System Architecture
+
+```mermaid
+flowchart TD
+    A["AI Client<br/>Claude Desktop / MCP Client"]
+    B["FastMCP<br/>Tool Registration and Routing"]
+    C["Repository Tools"]
+    D["Issue Management"]
+    E["Pull Request Tools"]
+    F["File and Commit Tools"]
+    G["Shared HTTP Request Layer<br/>HTTPX"]
+    H["GitHub REST API"]
+    I["GITHUB_TOKEN<br/>Environment Variable"]
+
+    A <-->|JSON-RPC / stdio| B
+
+    subgraph SERVER["GitHub MCP Server"]
+        B --> C
+        B --> D
+        B --> E
+        B --> F
+
+        C --> G
+        D --> G
+        E --> G
+        F --> G
+    end
+
+    I --> G
+    G <-->|HTTPS / REST| H
+```
+
+### Request Lifecycle
+
+1. An MCP-compatible client launches the server as a local subprocess.
+2. The client discovers available tools and their input schemas.
+3. A tool is invoked with structured arguments.
+4. The server constructs an authenticated GitHub REST API request.
+5. GitHub returns the requested data.
+6. The server transforms the response into structured results.
+7. The MCP client receives the results and uses them to complete the user's request.
+
+## Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| Python | Core application development |
+| Model Context Protocol | Standardised AI tool integration |
+| FastMCP | MCP server and tool registration |
+| HTTPX | HTTP communication |
+| GitHub REST API | Repository data and operations |
+| setuptools | Python packaging |
+| pytest | Automated testing |
+| pytest-mock | Mocking external dependencies |
+| GitHub Actions | Continuous integration |
+| Git | Version control |
+
+## Available Tools
+
+### Authentication
 
 | Tool | Description |
 |---|---|
-| `get_authenticated_user` | Returns the profile of the logged-in GitHub user |
-| `search_repositories` | Search GitHub repos by keyword, sortable by stars/forks/updated |
-| `get_repository` | Fetch metadata (stars, forks, topics, license) for any repo |
-| `list_issues` | List open/closed issues with optional label filtering |
-| `get_issue` | Fetch full details and body for a single issue |
-| `create_issue` | Create a new issue with title, body, and labels |
-| `update_issue` | Edit title/body, open/close, or relabel an issue |
-| `list_pull_requests` | List PRs by state (open/closed/all) |
-| `get_pull_request` | Full PR details including diff stats and mergeable status |
-| `list_pr_files` | Every file changed in a PR with additions/deletions |
-| `get_file_contents` | Read any file from a repo at any branch/commit |
-| `list_repository_commits` | Recent commits on any branch with messages and authors |
+| `get_authenticated_user` | Retrieve the authenticated account's profile. |
 
----
+### Repository Management
 
-## Prerequisites
+| Tool | Description |
+|---|---|
+| `search_repositories` | Discover repositories using GitHub search queries. |
+| `get_repository` | Retrieve repository metadata, language, topics and licence information. |
 
-- Python 3.11 or higher
-- A GitHub [Personal Access Token](https://github.com/settings/tokens)
-  - For public repos: no scopes needed
-  - For private repos / creating issues: enable the `repo` scope
+### Issue Management
 
----
+| Tool | Description |
+|---|---|
+| `list_issues` | Retrieve issues with optional state and label filters. |
+| `get_issue` | Inspect the details of a specific issue. |
+| `create_issue` | Open an issue with a title, description and optional labels. |
+| `update_issue` | Modify an existing issue, including its status and labels. |
 
-## Installation
+### Pull Requests
+
+| Tool | Description |
+|---|---|
+| `list_pull_requests` | Retrieve pull requests by state. |
+| `get_pull_request` | Inspect pull request metadata and change statistics. |
+| `list_pr_files` | Retrieve the files modified by a pull request. |
+
+### Source Code and History
+
+| Tool | Description |
+|---|---|
+| `get_file_contents` | Retrieve file contents from a repository. |
+| `list_repository_commits` | Inspect recent commits and their authors. |
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.11–3.14 (CI-tested versions).
+- Git.
+- A GitHub Personal Access Token.
+- An MCP-compatible AI client for interactive usage.
+
+Create a GitHub token at:
+
+https://github.com/settings/tokens
+
+### Clone the Repository
 
 ```bash
-# 1. Clone the repository
 git clone https://github.com/OfficialBakang/github-mcp-server.git
 cd github-mcp-server
-
-# 2. Create and activate a virtual environment (recommended)
-python3 -m venv .venv
-source .venv/bin/activate        # macOS / Linux
-# .venv\Scripts\activate         # Windows
-
-# 3. Install dependencies
-pip install -r requirements.txt
 ```
 
----
+### Installation — Windows (CMD)
+
+```cmd
+py -3.14 -m venv .venv
+.venv\Scripts\activate.bat
+
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+```
+
+Use another supported Python version if Python 3.14 is not installed.
+
+### Installation — Linux / macOS
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+```
+
+Linux and Windows are covered by automated CI. macOS installation instructions are provided but are not currently verified by the CI matrix.
+
+### Verify Installation
+
+```bash
+python -m pip show github-mcp-server
+python -m pip check
+```
+
+Verify the application entry point:
+
+```bash
+python -c "from server import main; assert callable(main); print('Entry point OK')"
+```
 
 ## Configuration
 
-Export your GitHub token before running the server:
+The server reads authentication credentials from the `GITHUB_TOKEN` environment variable.
 
-```bash
-export GITHUB_TOKEN=ghp_your_token_here
+### Windows Command Prompt
+
+```cmd
+set "GITHUB_TOKEN=YOUR_GITHUB_TOKEN"
 ```
 
-Or add it to your shell profile (`~/.zshrc`, `~/.bashrc`) so it persists.
+### Windows PowerShell
 
----
+```powershell
+$env:GITHUB_TOKEN = "YOUR_GITHUB_TOKEN"
+```
+
+### Linux / macOS
+
+```bash
+export GITHUB_TOKEN="YOUR_GITHUB_TOKEN"
+```
+
+Replace the placeholder locally with your token. Never commit real credentials.
 
 ## Running the Server
+
+After activating the virtual environment:
+
+```bash
+github-mcp-server
+```
+
+Alternatively:
 
 ```bash
 python server.py
 ```
 
-The server will start and wait for MCP messages on stdin. You won't see output here — connect it through Claude Desktop instead.
-
----
+The server communicates over standard input and output (stdio). It is intended to be launched by an MCP client rather than accessed as a conventional HTTP web server.
 
 ## Connecting to Claude Desktop
 
-1. Open Claude Desktop → **Settings → Developer → Edit Config**
-2. Add this block to `claude_desktop_config.json`:
+Open the Claude Desktop MCP configuration file and register the server.
+
+### Windows Configuration
 
 ```json
 {
   "mcpServers": {
     "github": {
-      "command": "python3",
-      "args": ["/absolute/path/to/github-mcp-server/server.py"],
+      "command": "C:\\path\\to\\github-mcp-server\\.venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\path\\to\\github-mcp-server\\server.py"
+      ],
       "env": {
-        "GITHUB_TOKEN": "ghp_your_token_here"
+        "GITHUB_TOKEN": "YOUR_GITHUB_TOKEN"
       }
     }
   }
 }
 ```
 
-3. Save and **restart Claude Desktop**.
-4. You should now see the GitHub tools available in the tools panel (🔧 icon).
+### Linux / macOS Configuration
 
----
-
-## Example Prompts (once connected)
-
-```
-"Search for the top 5 Python MCP server projects on GitHub"
-
-"List all open bugs in the facebook/react repository"
-
-"Show me the last 10 commits on the main branch of vercel/next.js"
-
-"Read the contents of the README.md file from torvalds/linux"
-
-"Create an issue in my repo called 'Fix login button on mobile' with the label 'bug'"
-
-"Get the details of PR #42 in microsoft/vscode and summarise the changes"
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "/absolute/path/github-mcp-server/.venv/bin/python",
+      "args": [
+        "/absolute/path/github-mcp-server/server.py"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "YOUR_GITHUB_TOKEN"
+      }
+    }
+  }
+}
 ```
 
----
+Replace the example paths with the actual installation paths and configure your token securely.
 
-## Project Structure
+Restart the client after saving the configuration.
 
-```
-github-mcp-server/
-├── src/
-│   └── github_mcp/
-│       ├── __init__.py
-│       └── server.py        ← All tools live here
-├── tests/
-│   └── test_server.py
-├── requirements.txt
-├── pyproject.toml
-└── README.md
-```
+The available GitHub tools should then be discoverable by the MCP client.
 
----
+## Example Use Cases
 
-## Running Tests
+Once connected to an MCP-compatible client, users can issue natural-language requests such as:
+
+### Repository Discovery
+
+> Find five Python repositories related to retrieval-augmented generation and summarise their popularity and purpose.
+
+### Issue Triage
+
+> List the open issues labelled bug in my repository and summarise the main problems.
+
+### Pull Request Inspection
+
+> Inspect pull request #42 and summarise the modified files and change statistics.
+
+### Source Code Exploration
+
+> Retrieve server.py from my repository and explain its architecture.
+
+### Commit History
+
+> Summarise the ten most recent commits on the main branch.
+
+### Issue Creation
+
+> Draft an issue for the failing login workflow and create it after I confirm.
+
+Write operations modify GitHub resources and should only be performed with explicit user approval.
+
+## Automated Testing
+
+The project includes 21 automated tests covering the behaviour of all 12 tool functions.
+
+The test suite validates response transformations, optional fields, request construction, result limits and selected error scenarios.
+
+### Run the Test Suite
 
 ```bash
-pip install pytest pytest-mock
 python -m pytest test_server.py -v
 ```
 
----
+### Verified Local Test Result
 
-## How It Works
-
-```
-Claude Desktop  ──stdio──►  github-mcp-server  ──HTTPS──►  api.github.com
-     (MCP client)               (this project)               (GitHub REST API)
+```text
+21 passed in 1.64s
 ```
 
-1. Claude Desktop spawns this script as a subprocess.
-2. They communicate via JSON-RPC messages over stdin/stdout (the MCP protocol).
-3. When Claude wants to call a tool (e.g. `search_repositories`), it sends a tool-call message.
-4. This server receives it, calls the GitHub REST API with your token, and returns the result.
-5. Claude uses the result to compose its response.
+Recorded using Python 3.14.6 on Windows.
 
----
+### Test Coverage Areas
 
-## Security Notes
+| Component | Tests |
+|---|---:|
+| Authenticated user | 2 |
+| Repository search | 3 |
+| Repository metadata | 2 |
+| Issue listing | 2 |
+| Issue retrieval | 1 |
+| Issue creation | 2 |
+| Issue updates | 2 |
+| Pull request listing | 1 |
+| Pull request details | 1 |
+| Pull request files | 1 |
+| File content retrieval | 2 |
+| Commit history | 2 |
+| Total | 21 |
 
-- Your GitHub token is **never sent to Anthropic** — it only leaves your machine to reach `api.github.com` directly.
-- Use a token with the minimum scopes your use case requires.
-- Treat your token like a password; don't commit it to source control.
+The passing test count is not a statement of 100% code coverage or live API integration coverage.
 
----
+## Continuous Integration
+
+GitHub Actions automatically validates the project on pushes and pull requests.
+
+### CI Testing Matrix
+
+| Python Version | Ubuntu | Windows |
+|---|---|---|
+| 3.11 | Passed | Passed |
+| 3.12 | Passed | Passed |
+| 3.13 | Passed | Passed |
+| 3.14 | Passed | Passed |
+
+All eight environments passed during repository-quality validation.
+
+Each CI job:
+
+1. Checks out the repository.
+2. Configures the selected Python version.
+3. Installs the project and development dependencies.
+4. Checks for dependency conflicts.
+5. Verifies the application entry point.
+6. Executes the automated test suite.
+
+View workflow results:
+
+https://github.com/OfficialBakang/github-mcp-server/actions
+
+## Engineering Decisions
+
+### Standardised AI Tool Integration
+
+MCP provides a common interface between AI applications and external tools, reducing the need for client-specific GitHub integrations.
+
+### Centralised HTTP Layer
+
+Shared HTTP helpers handle authentication, HTTP methods, response parsing and HTTP status errors.
+
+This avoids duplicating request logic across individual tools.
+
+### Explicit Dependency Constraints
+
+The project currently targets MCP SDK v1 because it uses the FastMCP API.
+
+An upper version constraint prevents incompatible MCP v2 releases from being installed unintentionally.
+
+### Reproducible Installation
+
+Python packaging is configured through pyproject.toml, allowing editable installation, development dependency management and CLI execution.
+
+### Cross-Platform Validation
+
+A CI matrix tests the package across multiple Python versions and operating systems to detect compatibility issues early.
+
+## Security Considerations
+
+- Credentials are supplied through environment variables.
+- GitHub API requests use HTTPS and bearer authentication.
+- HTTP requests use a configured timeout.
+- Use fine-grained Personal Access Tokens where supported.
+- Grant only the repository permissions required by your workflow.
+- Prefer read-only tokens when write operations are unnecessary.
+- Never commit tokens, environment secrets or client configuration containing credentials.
+- Revoke and rotate any exposed credentials.
+
+The server provides instructions encouraging confirmation before write operations. These instructions are not a server-enforced authorisation or approval mechanism.
+
+AI clients should enforce explicit approval for operations that modify repository data.
+
+Repository content retrieved by AI clients may contain untrusted instructions. Treat retrieved content as data, not trusted commands.
+
+## Project Structure
+
+```text
+github-mcp-server/
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── .gitignore
+├── LICENSE
+├── README.md
+├── pyproject.toml
+├── requirements.txt
+├── server.py
+└── test_server.py
+```
+
+| File | Responsibility |
+|---|---|
+| server.py | MCP server, GitHub tools and HTTP helpers |
+| test_server.py | Automated tool-level tests |
+| pyproject.toml | Package metadata and dependencies |
+| requirements.txt | Runtime dependency declarations |
+| ci.yml | Automated cross-platform validation |
+| .gitignore | Exclusion of local environments and generated artifacts |
+
+## Current Limitations
+
+- Local stdio transport only.
+- GitHub REST API only.
+- Result limits rather than comprehensive automatic pagination.
+- GitHub API rate limits apply.
+- Synchronous HTTP requests.
+- Write operations depend on the permissions of the configured token.
+- MCP SDK v2 migration is not yet implemented.
+- Live integration testing and macOS CI are not currently established.
+
+## Roadmap
+
+- [x] Implement 12 GitHub MCP tools.
+- [x] Implement authenticated REST API requests.
+- [x] Add automated tests.
+- [x] Configure installable Python packaging.
+- [x] Establish cross-platform CI.
+- [ ] Add automatic pagination.
+- [ ] Implement rate-limit-aware retries.
+- [ ] Improve structured error reporting.
+- [ ] Introduce server-enforced write-operation controls.
+- [ ] Add pull request creation and review tools.
+- [ ] Add GitHub Actions workflow inspection tools.
+- [ ] Add macOS CI validation.
+- [ ] Evaluate migration to MCP SDK v2.
 
 ## Contributing
 
-Pull requests are welcome! Ideas for new tools:
+Contributions, bug reports and feature suggestions are welcome.
 
-- [ ] Create and merge pull requests
-- [ ] Add PR review comments
-- [ ] Manage repository labels and milestones
-- [ ] List GitHub Actions workflow runs
-- [ ] Star / unstar repositories
+1. Fork the repository.
+2. Create a feature branch.
+3. Implement your changes.
+4. Add or update automated tests.
+5. Run the test suite locally.
+6. Submit a pull request.
 
----
+## Author
+
+**Bakang Mabilo**
+
+Software Developer | AI Engineering | Full-Stack Development
+
+BEngTech Electrical & Electronics Engineering — University of Johannesburg
+
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/OfficialBakang)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/oratile-mabilo/)
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License.
+
+See [LICENSE](LICENSE) for details.
+
+---
+
+Built to explore intelligent developer tooling, AI systems integration and reliable software engineering practices.
+

@@ -1,3 +1,4 @@
+
 # Virtual environments
 .venv/
 venv/
@@ -16,11 +17,18 @@ build/
 *.egg-info/
 *.egg
 
-# Test / coverage
+# Testing and coverage
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
 .tox/
+.nox/
+
+# Linting and type checking
+.ruff_cache/
+.mypy_cache/
+.pyright/
 
 # IDE
 .vscode/
@@ -28,10 +36,17 @@ htmlcov/
 *.swp
 *.swo
 
-# OS
+# Operating system
 .DS_Store
 Thumbs.db
 
-# Secrets — never commit your token!
+# Logs
+*.log
+
+# Secrets and environment variables
 .env
+.env.*
 *.env
+
+# Allow example environment configuration
+!.env.example

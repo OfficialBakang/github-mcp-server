@@ -22,10 +22,10 @@ dependencies = [
 ]
 
 [project.scripts]
-github-mcp-server = "github_mcp.server:main"
+github-mcp-server = "server:main"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.setuptools]
+py-modules = ["server"]
 
 [project.urls]
 "Homepage" = "https://github.com/yourusername/github-mcp-server"
